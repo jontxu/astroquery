@@ -208,6 +208,7 @@ class TestTap(unittest.TestCase):
             "REQUEST": "doQuery",
             "LANG": "ADQL",
             "FORMAT": "votable",
+            "MAXREC": 10,
             "tapclient": str(TAP_CLIENT_ID),
             "PHASE": "RUN",
             "QUERY": str(q)}
@@ -220,7 +221,7 @@ class TestTap(unittest.TestCase):
 
         responseLaunchJob.set_status_code(200)
         responseLaunchJob.set_message("OK")
-        job = tap.launch_job(query)
+        job = tap.launch_job(query, maxrec=10)
         assert job is not None, "Expected a valid job"
         assert job.async_ is False, "Expected a synchronous job"
         assert job.get_phase() == 'COMPLETED', \
@@ -487,6 +488,7 @@ class TestTap(unittest.TestCase):
             "REQUEST": "doQuery",
             "LANG": "ADQL",
             "FORMAT": "votable",
+            "MAXREC": 10,
             "tapclient": str(TAP_CLIENT_ID),
             "QUERY": str(query)}
         sortedKey = taputils.taputil_create_sorted_dict_key(dictTmp)
@@ -517,7 +519,7 @@ class TestTap(unittest.TestCase):
 
         responseResultsJob.set_status_code(200)
         responseResultsJob.set_message("OK")
-        job = tap.launch_job_async(query, autorun=False)
+        job = tap.launch_job_async(query, maxrec=10, autorun=False)
         assert job is not None, "Expected a valid job"
         assert job.get_phase() == 'PENDING', \
             "Wrong job phase. Expected: %s, found %s" % \

@@ -238,7 +238,7 @@ class Tap(object):
         log.info("Done.")
         return tsp.get_tables()
 
-    def launch_job(self, query, name=None, output_file=None,
+    def launch_job(self, query, maxrec=None, name=None, output_file=None,
                    output_format="votable", verbose=False,
                    dump_to_file=False, upload_resource=None,
                    upload_table_name=None):
@@ -248,6 +248,8 @@ class Tap(object):
         ----------
         query : str, mandatory
             query to be executed
+        maxrec : int, optional, default None
+            maximum number of rows to return (TAP `MAXREC` parameter)
         output_file : str, optional, default None
             file name where the results are saved if dumpToFile is True.
             If this parameter is not provided, the jobid is used instead
@@ -274,7 +276,7 @@ class Tap(object):
             if upload_table_name is None:
                 raise ValueError("Table name is required when a resource " +
                                  "is uploaded")
-            response = self.__launchJobMultipart(query,
+            response = self.__launchJobMultipart(query, maxrec,
                                                  upload_resource,
                                                  upload_table_name,
                                                  output_format,
@@ -282,7 +284,7 @@ class Tap(object):
                                                  verbose,
                                                  name)
         else:
-            response = self.__launchJob(query,
+            response = self.__launchJob(query, maxrec,
                                         output_format,
                                         "sync",
                                         verbose,
@@ -343,7 +345,7 @@ class Tap(object):
             job._phase = 'COMPLETED'
         return job
 
-    def launch_job_async(self, query, name=None, output_file=None,
+    def launch_job_async(self, query, maxrec=None, name=None, output_file=None,
                          output_format="votable", verbose=False,
                          dump_to_file=False, background=False,
                          upload_resource=None, upload_table_name=None,
@@ -354,6 +356,8 @@ class Tap(object):
         ----------
         query : str, mandatory
             query to be executed
+        maxrec : int, optional, default None
+            maximum number of rows to return (TAP `MAXREC` parameter)
         output_file : str, optional, default None
             file name where the results are saved if dumpToFile is True.
             If this parameter is not provided, the jobid is used instead
@@ -386,6 +390,7 @@ class Tap(object):
                 raise ValueError(
                     "Table name is required when a resource is uploaded")
             response = self.__launchJobMultipart(query,
+                                                 maxrec,
                                                  upload_resource,
                                                  upload_table_name,
                                                  output_format,
@@ -395,6 +400,7 @@ class Tap(object):
                                                  autorun)
         else:
             response = self.__launchJob(query,
+                                        maxrec,
                                         output_format,
                                         "async",
                                         verbose,
@@ -553,7 +559,7 @@ class Tap(object):
         """
         job.save_results(verbose=verbose)
 
-    def __launchJobMultipart(self, query, uploadResource, uploadTableName,
+    def __launchJobMultipart(self, query, maxrec, uploadResource, uploadTableName,
                              outputFormat, context, verbose, name=None,
                              autorun=True):
         uploadValue = str(uploadTableName) + ",param:" + str(uploadTableName)
@@ -564,6 +570,8 @@ class Tap(object):
             "tapclient": str(TAP_CLIENT_ID),
             "QUERY": str(query),
             "UPLOAD": ""+str(uploadValue)}
+        if maxrec is not None:
+            args['MAXREC'] = maxrec
         if autorun is True:
             args['PHASE'] = 'RUN'
         if name is not None:
@@ -593,7 +601,7 @@ class Tap(object):
             print(response.getheaders())
         return response
 
-    def __launchJob(self, query, outputFormat, context, verbose, name=None,
+    def __launchJob(self, query, maxrec, outputFormat, context, verbose, name=None,
                     autorun=True):
         args = {
             "REQUEST": "doQuery",
@@ -601,6 +609,8 @@ class Tap(object):
             "FORMAT": str(outputFormat),
             "tapclient": str(TAP_CLIENT_ID),
             "QUERY": str(query)}
+        if maxrec is not None:
+            args['MAXREC'] = maxrec
         if autorun is True:
             args['PHASE'] = 'RUN'
         if name is not None:
